@@ -1,10 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>National Zakat Foundation - Support the Deen</title>
+  
+  <!-- Fast In-Browser QR Code Generator Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
     :root {
       --primary: #115e2e;
@@ -37,7 +40,7 @@
     input, select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s; }
     input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(17, 94, 46, 0.15); }
 
-    /* Custom Amount Input Box Special Style */
+    /* Custom Amount Input */
     .amount-input-wrapper { position: relative; display: flex; align-items: center; }
     .currency-symbol { position: absolute; left: 14px; font-size: 18px; font-weight: 700; color: var(--primary); }
     .amount-input-wrapper input { padding-left: 35px; font-size: 18px; font-weight: 700; color: #111; }
@@ -90,9 +93,33 @@
     .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
     .divider span { padding: 0 10px; }
 
-    /* QR Box */
-    .qr-box { text-align: center; background: #fafafa; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 18px; }
-    .qr-box img { max-width: 200px; width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    /* QR Container */
+    .qr-box { 
+      text-align: center; 
+      background: #fafafa; 
+      border: 2px dashed #cbd5e1; 
+      border-radius: 10px; 
+      padding: 18px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    #qrcode-container {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+      min-width: 200px;
+    }
+    #qrcode-container img {
+      margin: 0 auto;
+    }
+
     .upi-tag { margin-top: 12px; font-size: 14px; font-weight: bold; background: #e2e8f0; padding: 6px 12px; border-radius: 6px; display: inline-block; word-break: break-all; }
     .selected-amount-tag { margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--primary); }
 
@@ -112,14 +139,14 @@
   <div class="container">
     <div class="grid">
 
-      <!-- Donation Details Form (Custom Amount) -->
+      <!-- Donation Form -->
       <div class="card">
         <h2>Donation Form</h2>
         <form id="donationForm" onsubmit="handleFormSubmit(event)">
 
           <div class="form-group">
             <label>Niyat / Sahyog Ka Maqsad:</label>
-            <select id="donationType" required>
+            <select id="donationType" onchange="liveUpdateQR()" required>
               <option value="Zakat">Zakat (Mustahaq bhai-behno ke liye)</option>
               <option value="Sadqah">Sadqah / Aam Khairaat</option>
               <option value="Deeni Taleem">Deeni Taleem / Madrasa Support</option>
@@ -163,11 +190,11 @@
         </form>
       </div>
 
-      <!-- Live QR Scanner Section (Desktop / Second Phone Users) -->
+      <!-- Live QR Scanner Section -->
       <div class="card" id="qrCard">
         <h2>Scan & Pay (UPI)</h2>
         <div class="qr-box">
-          <img id="upiQrCode" src="1000391398.jpg" alt="UPI QR Code">
+          <div id="qrcode-container"></div>
 
           <div id="displayAmountText" class="selected-amount-tag">Koi bhi raqam scan karke bhej sakte hain</div>
           <span class="upi-tag">gpay-12211815168@okbizaxis</span>
@@ -189,16 +216,43 @@
   <script>
     const UPI_ID = "gpay-12211815168@okbizaxis";
     const PAYEE_NAME = "National Zakat Foundation";
+    let qrInstance = null;
+
+    function buildUpiString() {
+      const amt = document.getElementById('customAmount').value;
+      const note = document.getElementById('donationType').value || "Zakat";
+
+      // Valid Standard UPI Deep Link
+      let upi = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&cu=INR&tn=${encodeURIComponent(note)}`;
+      
+      if (amt && parseFloat(amt) > 0) {
+        upi += `&am=${parseFloat(amt).toFixed(2)}`;
+      }
+      return { upi, amt };
+    }
 
     function liveUpdateQR() {
-      const amt = document.getElementById('customAmount').value;
+      const { upi, amt } = buildUpiString();
       const textDisplay = document.getElementById('displayAmountText');
 
-      if (amt && amt > 0) {
+      if (amt && parseFloat(amt) > 0) {
         textDisplay.innerText = `Chuni hui raqam: ₹${amt}`;
       } else {
         textDisplay.innerText = `Koi bhi raqam scan karke bhej sakte hain`;
       }
+
+      // Live Instant Client-Side QR Generation
+      const container = document.getElementById('qrcode-container');
+      container.innerHTML = ""; // purana clear karein
+
+      new QRCode(container, {
+        text: upi,
+        width: 190,
+        height: 190,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
     }
 
     function payDirect(appType) {
@@ -206,28 +260,22 @@
       const amt = amtInput.value;
       const note = document.getElementById('donationType').value || "Zakat";
 
-      // Raqam check validation
-      if (!amt || amt <= 0) {
+      if (!amt || parseFloat(amt) <= 0) {
         alert("Kripya pehle donation ki raqam (Amount) bharein.");
         amtInput.focus();
         return;
       }
 
-      // Universal UPI link
-      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${amt}&cu=INR&tn=${encodeURIComponent(note)}`;
+      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${parseFloat(amt).toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
 
       if (appType === 'phonepe') {
-        // Direct PhonePe deep link scheme
-        const phonepeUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${amt}&cu=INR&tn=${encodeURIComponent(note)}`;
-
+        const phonepeUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${parseFloat(amt).toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
         window.location.href = phonepeUrl;
 
-        // Fallback: Agar PhonePe install na ho ya link na khule toh 1.2 sec me generic UPI open hoga
         setTimeout(() => {
           window.location.href = upiUrl;
         }, 1200);
       } else {
-        // Generic intent jo phone me maujood sabhi UPI apps dikhayega
         window.location.href = upiUrl;
       }
     }
@@ -236,9 +284,12 @@
       e.preventDefault();
       document.getElementById('qrCard').scrollIntoView({ behavior: 'smooth' });
     }
+
+    // Page ready hote hi default QR bana dega
+    document.addEventListener("DOMContentLoaded", function() {
+      liveUpdateQR();
+    });
   </script>
 
 </body>
 </html>
-
-    
