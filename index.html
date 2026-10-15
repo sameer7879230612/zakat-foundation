@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -15,7 +16,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
-    
+
     /* Header */
     header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; text-align: center; padding: 35px 15px 45px; border-bottom: 4px solid var(--accent); }
     .bismillah { font-size: 22px; color: var(--accent); margin-bottom: 8px; font-weight: 500; }
@@ -26,7 +27,7 @@
     .container { max-width: 850px; margin: -25px auto 40px; padding: 0 15px; }
     .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
     @media (min-width: 768px) { .grid { grid-template-columns: 1.1fr 1fr; } }
-    
+
     .card { background: #fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.07); padding: 22px; border-top: 4px solid var(--primary); }
     .card h2 { font-size: 19px; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
 
@@ -35,7 +36,7 @@
     label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; display: block; }
     input, select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s; }
     input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(17, 94, 46, 0.15); }
-    
+
     /* Custom Amount Input Box Special Style */
     .amount-input-wrapper { position: relative; display: flex; align-items: center; }
     .currency-symbol { position: absolute; left: 14px; font-size: 18px; font-weight: 700; color: var(--primary); }
@@ -115,7 +116,7 @@
       <div class="card">
         <h2>Donation Form</h2>
         <form id="donationForm" onsubmit="handleFormSubmit(event)">
-          
+
           <div class="form-group">
             <label>Niyat / Sahyog Ka Maqsad:</label>
             <select id="donationType" required>
@@ -166,10 +167,10 @@
       <div class="card" id="qrCard">
         <h2>Scan & Pay (UPI)</h2>
         <div class="qr-box">
-          <img id="upiQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=9589122136@okbizaxis%26pn=National%20Zakat%20Foundation%26cu=INR" alt="UPI QR Code">
-          
+          <img id="upiQrCode" src="1000391398.jpg" alt="UPI QR Code">
+
           <div id="displayAmountText" class="selected-amount-tag">Koi bhi raqam scan karke bhej sakte hain</div>
-          <span class="upi-tag">9589122136@okbizaxis</span>
+          <span class="upi-tag">gpay-12211815168@okbizaxis</span>
           <p style="font-size: 12px; color: var(--muted); margin-top: 8px;">PhonePe, Google Pay, Paytm ya kisi bhi UPI App se scan karein</p>
         </div>
       </div>
@@ -186,19 +187,16 @@
   </footer>
 
   <script>
-    const UPI_ID = "9589122136@okbizaxis";
+    const UPI_ID = "gpay-12211815168@okbizaxis";
     const PAYEE_NAME = "National Zakat Foundation";
 
     function liveUpdateQR() {
       const amt = document.getElementById('customAmount').value;
-      const qrImg = document.getElementById('upiQrCode');
       const textDisplay = document.getElementById('displayAmountText');
-      
+
       if (amt && amt > 0) {
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${UPI_ID}%26pn=${encodeURIComponent(PAYEE_NAME)}%26am=${amt}%26cu=INR`;
         textDisplay.innerText = `Chuni hui raqam: ₹${amt}`;
       } else {
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${UPI_ID}%26pn=${encodeURIComponent(PAYEE_NAME)}%26cu=INR`;
         textDisplay.innerText = `Koi bhi raqam scan karke bhej sakte hain`;
       }
     }
@@ -221,7 +219,7 @@
       if (appType === 'phonepe') {
         // Direct PhonePe deep link scheme
         const phonepeUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${amt}&cu=INR&tn=${encodeURIComponent(note)}`;
-        
+
         window.location.href = phonepeUrl;
 
         // Fallback: Agar PhonePe install na ho ya link na khule toh 1.2 sec me generic UPI open hoga
@@ -242,3 +240,5 @@
 
 </body>
 </html>
+
+    
